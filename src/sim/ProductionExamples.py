@@ -1,4 +1,8 @@
+'''
+提供仿真系统环境1, 2实例
+'''
 import numpy as np
+
 from collections import OrderedDict
 
 from sim.ProductionSystem import ProductionSystem

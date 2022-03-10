@@ -36,6 +36,7 @@ class Machine(CoreObject):
         self.epsilon = self.system.epsilon
         
         # set the production_store as default, for starting_machine decide separately in working()
+        # 将生产存储设置为默认值，以便启动机器在工作中单独决定
         self.store = self.system.production_store
         # check if machine can start new products and which tasks can be run on this machine
         # for each product type
@@ -72,6 +73,7 @@ class Machine(CoreObject):
 
     def can_do_next_task(self, product):
         """ checks if this machine can do the next task of a given product """
+        # 检验机器是否能做下一个工作
         if product.next_task in self.tasks:
             return True
         else:
@@ -80,6 +82,7 @@ class Machine(CoreObject):
     def needs_task_assignment(self):
         """ checks if this machine currently needs to have a new task assigned """
         # task needs to be assigned if there is no assigned task, no product and machine is ready to work
+        # 当前机器处于工作状态但是没有任务，需要请求任务
         if self.product is None and self.assigned_task is None and self.status in ['waiting','working','repair_finished', None]:
             return True
         else:
@@ -87,6 +90,7 @@ class Machine(CoreObject):
         
     def find_minimum_due_date(self, store):
         """ returns the minimal due_date of all products in this store that can be processed by this machine """
+        """返回最小的截止日期"""
         min_due_date = float('inf')
         for product in store.items:
             if product.due_date is not None:
@@ -98,6 +102,7 @@ class Machine(CoreObject):
     
     def find_minimum_due_date_task(self, store, task):
         """ returns the minimal due_date of all products in this store which need the given task next """
+        # 返回截止日期最早的产品
         min_due_date = float('inf')
         for product in store.items:
             if product.due_date is not None:
@@ -109,6 +114,7 @@ class Machine(CoreObject):
     
     def calculate_output_buffer_size(self):
         """ returns the current amount of items in the buffer behind this machine (always based on the production store) """
+        # 返回此机器后面缓冲区中的当前项目数量（始终基于生产存储）
         output_buffer_size = 0
         for product in self.system.production_store.items:
             if product.previous_machine == self.id:
@@ -117,6 +123,7 @@ class Machine(CoreObject):
 
     def working(self):
         """ Machine processes parts until interrupted by failure. See the documentation for further explanation. """
+        """机器加工零件，直到因故障而中断。"""
         while True:
             self.logger.debug("{} Machine.working() started, status: {}".format(self.id, self.status), extra = {"simtime": self.sim_env.now})
             try:
@@ -137,16 +144,20 @@ class Machine(CoreObject):
                                     
                             # retrieve item whose next step can be done by this machine
                             # if there is currently an object in the store for which this machine can do the next task, retrieve it
+                            # 检索此机器可以完成下一步的项目
+                            # 如果存储区中当前有此机器可以执行下一个任务的对象，请检索它
                             due_date = self.find_minimum_due_date(self.store)
                             if due_date != float('inf'):
                                 with self.store.get(filter=lambda product: self.can_do_next_task(product) and product.due_date == due_date) as get_request:
                                     self.product = yield get_request
                             # if there is no object in the store for which this machine can do the next step, wait for one
+                            # 如果存储中没有机器要执行的下一个对象，则进行等待
                             else:
                                 with self.store.get(filter=lambda product: self.can_do_next_task(product)) as get_request:
                                     self.product = yield get_request
                             
                         # set process time here to not have it begin anew if the machine gets interrupted during processing a part
+                        # 在此处设置加工时间，如果机器在加工零件时被中断，则不会重新开始
                         self.remaining_process_time = self.tasks[self.product.next_task]
                         self.logger.debug("{} Part from store assigned, type {}, due_date: {}, task: {}".format(self.id,
                             self.product.product_type, self.product.due_date, self.product.next_task), extra = {"simtime": self.sim_env.now})
@@ -172,6 +183,7 @@ class Machine(CoreObject):
                         # 'tell' the product this task was finished
                         self.product.previous_machine = self.id
                         self.product.previous_task = self.product.next_task
+                        # 确定当前产品的下一个任务
                         self.product.finish_current_task()
                         
                         # if the product is finished, put it in the sink_store
@@ -196,10 +208,13 @@ class Machine(CoreObject):
                     
                     # put part in production_store which simulates output buffers
                     # should be guaranteed that there is space in the output_buffer (and production_store) due to previously waiting for space
+                    # 将零件放入模拟输出缓冲区的生产存储区
+                    # 应确保输出缓冲区（和生产存储区）中有之前等待的空间
                     if self.production_state == 'putting_product_in_output_buffer':                        
                         self.status = 'waiting'
                                                 
                         # since there is space in the output_buffer, there should be space in the production_store, so just put item there
+                        # 因为输出缓冲区中有空间，所以生产存储区中应该有空间，所以只需将产品放在那里
                         with self.system.production_store.put(self.product) as put_request:
                             self.logger.debug("{} put item in production store, date {}, task {}, inventory {}".format(self.id,
                                 self.product.due_date, self.product.next_task, len(self.system.production_store.items)), extra = {"simtime": self.sim_env.now})
@@ -269,6 +284,7 @@ class Machine(CoreObject):
 
     def maintain(self):
         """ Machine gets maintained. Duration is based on repair_type """
+        """机器得到维护。持续时间取决于维修类型"""
 
         self.logger.debug("{} Machine.maintain() started".format(self.id), extra = {"simtime": self.sim_env.now})
         
@@ -290,6 +306,7 @@ class Machine(CoreObject):
                     yield self.sim_env.timeout(1)
                 except simpy.Interrupt:
                     # ignore interruptions, repair time is fixed
+                    # 忽略中断，修复时间是固定的
                     yield self.sim_env.timeout(1)
             else:
                 try:
@@ -307,7 +324,7 @@ class Machine(CoreObject):
         self.health = 0
         self.failed = False
         
-        # reset interrupt_origin
+        # reset interrupt_origin 重置中断源
         self.interrupt_origin = None
         if not self.weekly_schedule.is_it_worktime():
             self.logger.debug("{} maintenace finished -> weekend".format(self.id), extra={"simtime": self.sim_env.now})
@@ -320,7 +337,7 @@ class Machine(CoreObject):
          
     def degrade(self):
         """ Machine degrades based on a discrete state Markovian degradation process. """
-
+        # 机器基于离散状态马尔可夫退化过程。
         while True:
             try:
                 yield self.sim_env.timeout(self.epsilon)
@@ -328,8 +345,9 @@ class Machine(CoreObject):
                     self.logger.debug("{} Machine.degrade() started with status: {}".format(self.id, self.status), extra = {"simtime": self.sim_env.now})
                     # yield self.sim_env.timeout(1)
                     # sample next health state based on transition matrix
+                    #基于衰减矩阵得到下一阶段健康状态
                     states = np.arange(0, self.failed_state+1)
-                    self.health = np.random.choice(states, p=self.degradation[self.health])                            
+                    self.health = np.random.choice(states, p=self.degradation[self.health])   #q的概率保持当前状态，1-q的概率状态继续恶化
     
                     # machine fails                
                     if ((self.health == self.failed_state) and (not self.failed)):
@@ -365,17 +383,20 @@ class Machine(CoreObject):
 
     def _generate_degradation_matrix(self, q, dim=10):
         """
-        Creates discrete Markovian degradation matrix with given degradation rate 
+        Creates discrete Markovian degradation matrix with given degradation rate
+        创建具有给定退化率的离散马尔可夫衰变矩阵
         :param q: int, degradation rate
-        :param dim: int, number of degradation states 
+        :param dim: int, number of degradation states
         :return: np.array, degradation matrix
         """
+        #eye 生成一个对角阵数组
         degradation_matrix = np.eye(dim)
         for i in range(len(degradation_matrix)-1):
             degradation_matrix[i, i] = 1 - q
             degradation_matrix[i, i+1] = q
 
         return degradation_matrix
-    
+
+    #打印实例化对象时的输出
     def __repr__(self):
         return "%s"  %(self.id)

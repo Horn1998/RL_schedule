@@ -20,6 +20,7 @@ class SimulationStateConverter(ABC):
         self.tasks = self.system.tasks
         
         # variable to save when the method get_available_tasks() was called for the last time (used to save runtime)
+        # 上次调用get_available_tasks（）方法时要保存的变量（用于保存运行时）
         self.last_called_available_tasks = None
 
     

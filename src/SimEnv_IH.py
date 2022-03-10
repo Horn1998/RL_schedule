@@ -69,10 +69,11 @@ class SimEnvIH(SimEnv):
         # Reset required_maintenance variable
         self.maintenance_requested = False
 
-        # execute action
+        # execute action 选择一个机器
         self.execute_action(action)
         
         # run simulation until next decision point
+        # 运行仿真知道下一个决策点(可维护资源不为0或者有维护请求产生)
         self.next_sim_step()
                 
         # run model
@@ -92,8 +93,10 @@ class SimEnvIH(SimEnv):
     def next_sim_step(self):
         """ Performs a simulation until next decision point is reached """
         # Perform steps until maintenance available and required
+        # 当系统维护资源不足或者没有维护请求时，进入循环等待状态
         while self.system.available_maintenance <= 0 or self.maintenance_requested==False:
             # Check if simulation time is reached and exit if it is
+            # 如果模型超时，则结束模型
             self.done = self._check_if_model_is_done()
             if self.done:
                 break
@@ -113,20 +116,24 @@ class SimEnvIH(SimEnv):
     def execute_action(self, action):
         """
         Executes the agents action in the factory simulation
+        在仿真工厂中执行代理动作
         :param action: int,  numerival value of action chosen by the agent
         """
-        
+
+        #什么也不做
         if action == self.action_space.n-1:
             self.logger.debug("Action Idle chosen", extra = {"simtime": self.system.sim_env.now})
             return
         
-        # select machine based on action
+        # select machine based on action ？？？
+        # 动作就是选择某一个执行任务的机器
         machine = self.system.machines[action]
 
         self.logger.debug("Action Maintain {} choosen".format(machine.id), extra = {"simtime": self.system.sim_env.now})
         
         # Differentiation necessary if interruption due to degrading or CBM
         # Degradation stopped on weekend, this case only appears in work time
+        # 降级在周末停止，这种情况只出现在工作时间
         if machine.interrupt_origin == 'from_degrade':
             machine.repair_type = 'cm'
             machine.assigned_maintenance = True
@@ -136,6 +143,7 @@ class SimEnvIH(SimEnv):
         else:
             # Parameter to decide from what origin the interruption comes from
             # case for weekend, scheduled maintenace on weekend is possible
+            # 如果是周末，可以在周末进行定期维护
             machine.repair_type = 'cbm'
             machine.interrupt_origin = 'from_scheduler'
             machine.assigned_maintenance = True

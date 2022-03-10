@@ -1,22 +1,22 @@
 import logging
 from abc import ABC, abstractmethod
-
+"""
+ 提供一个用以仿真的工厂结构
+"""
 
 class ProductionSystem(ABC):
-    """
-    Provides the structure of the factory for simulation.
-    """
-    
+
     @property
     @abstractmethod
     def maintenance_capacity(self):
         # int with maximum number of simultaneous maintenance processes
+        # 最大同时维护过程数 返回值 int
         pass
     
     @property
     @abstractmethod
     def product_types(self):
-        # list of product_types
+        # 产品类型列表
         pass
     
     @property
@@ -28,21 +28,21 @@ class ProductionSystem(ABC):
     @property
     @abstractmethod
     def machine_types(self):
-        # nested dict based on machine types and their specifications:
+        # 基于机器类型及其规格的嵌套dict：
         # {machine_type: {'tasks': {task: duration}, 'degradation_rate': float, 'repair_durations': {'cm': int, 'cbm': int}}}
         pass
     
     @property
     @abstractmethod
     def job_shop_machine(self):
-        # nested OrderedDict with all machines in the simulation:
+        # 模拟中所有机器的嵌套OrderedDict：
         # {machine_id: {'id': id, 'machine_type': machine_type, 'output_buffer_capacity': int}}
         pass
     
     @property
     @abstractmethod
     def weekend_on(self):
-        # switch to turn weekends in system on or off (machines do not work on weekends, but may be maintained)
+        # switch to turn weekends(休息日) in system on or off (machines do not work on weekends, but may be maintained)
         pass
     
     @property
@@ -52,7 +52,8 @@ class ProductionSystem(ABC):
         pass
     
     def __init__(self):
-        ''' infer all used tasks, check defined system for basic correctness and log its summary '''  
+        ''' infer all used tasks, check defined system for basic correctness and log its summary '''
+        # 推断所有使用的任务，检查定义的系统的基本正确性，并记录其摘要
         self.infer_tasks()
         self.log_summary()
     
@@ -60,11 +61,13 @@ class ProductionSystem(ABC):
         ''' infer all used (!) tasks in the system '''
         self.tasks = []
         # find all tasks that are actually used for the defined products
+        # 查找定义产品实际使用的所有任务
         for product_type in self.tasks_for_product.keys():
             for task in self.tasks_for_product[product_type]:
                 if task not in self.tasks:
                     self.tasks.append(task)
         # keep tasks in sorted order to make interpretation of agent output easier
+        # 保持任务有序，以便更容易解释代理输出
         self.tasks.sort()
     
         

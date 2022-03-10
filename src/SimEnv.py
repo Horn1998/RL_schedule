@@ -39,6 +39,7 @@ class SimEnv(gym.Env, ABC):
         Gym interface method: reset
         Initializes the environment and runs until the first decision point 
         is reached.
+        初始化环境并运行到第一个决策点到达。
         :return initial_observation: np.array, initial state space
         """ 
         pass
@@ -47,6 +48,7 @@ class SimEnv(gym.Env, ABC):
     @abstractmethod
     def next_sim_step(self):
         """ Performs a simulation until next decision point is reached """
+        # 执行模拟，直到到达下一个决策点
         pass
     
     @classmethod
@@ -54,6 +56,7 @@ class SimEnv(gym.Env, ABC):
     def execute_action(self, action):
         """
         Executes the agents action in the factory simulation
+        在工厂模拟中执行代理操作
         :param action: int,  numerival value of action chosen by the agent
         """
         pass
@@ -83,6 +86,7 @@ class SimEnv(gym.Env, ABC):
 
     def _get_bottleneck(self):
         """ Returns the duration of the longest process for each product type based on the system path for material flow. """
+        # 根据物料流的系统路径，返回每种产品类型的最长流程的持续时间。
         longest_task = {}
         for product_type in self.system.production_system.product_types:
             min_process_times = []
@@ -90,12 +94,14 @@ class SimEnv(gym.Env, ABC):
             for task in self.system.production_system.tasks_for_product[product_type]:
                 duration_task = float('inf')
                 # for one task for all machines find the smallest duration of that task
+                # 找到处理该任务最短需要的时间
                 for machine_type in self.system.production_system.machine_types:
                     if task in self.system.production_system.machine_types[machine_type]['tasks']:
                         if duration_task > self.system.production_system.machine_types[machine_type]['tasks'][task]:
                             duration_task = self.system.production_system.machine_types[machine_type]['tasks'][task]
                 min_process_times.append(duration_task)
                 assert (duration_task < float('inf')), 'Found a product in the simulation that can not be produced with the given machines.'
+            # 确定当前产品最长的一个任务的持续时间
             longest_task[product_type] = max(min_process_times)
         return longest_task
 
@@ -110,6 +116,7 @@ class SimEnv(gym.Env, ABC):
             active_simulation_time = self.system.simulation_time
            
         # Parts produced depend on the amount of products in sink_store
+        # 生产的零件取决于商店里的产品数量
         parts_produced, max_parts_possible, production_rate, lost_parts = {}, {}, {}, {}
         longest_task = self._get_bottleneck()
         self.logger.debug('Here are the longest process durations: {}'.format(longest_task), extra={'simtime': self.system.sim_env.now})
@@ -119,8 +126,11 @@ class SimEnv(gym.Env, ABC):
             for product in self.system.sink_store.items:
                     if product.product_type == product_type:
                         parts_produced[product_type] += 1
+            #最多能完成多少组件
             max_parts_possible[product_type] = math.floor(active_simulation_time/longest_task[product_type])
+            #组件生成率
             production_rate[product_type] =  round(100*(parts_produced[product_type]/max_parts_possible[product_type]))
+            #损失组件
             lost_parts[product_type] = max_parts_possible[product_type] - parts_produced[product_type]
         
         if self.reward_function.reward_cases is not None:

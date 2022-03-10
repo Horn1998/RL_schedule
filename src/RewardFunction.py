@@ -44,7 +44,7 @@ class RewardR2(RewardFunction):
                 
     def update(self):
         
-        failed, currently_repairing = 0,0
+        failed, currently_repairing = 0, 0
         
         for machine in self.system_state_converter.machines:
             if machine.status == 'failed':
@@ -54,14 +54,17 @@ class RewardR2(RewardFunction):
 
         # three cases:
         # case 1: cost for idle if no machine failed
+        # 无机器故障时的闲置成本
         if failed == 0 and currently_repairing == 0:
             self.reward += 0
             self.reward_cases['idle'] += 1
-        # case 2: cost for idle if a machine failed            
+        # case 2: cost for idle if a machine failed
+        # 有机器故障时的闲置成本
         elif failed > 0 and currently_repairing == 0:
             self.reward += -(10 * self.c_cbm) # - 5
             self.reward_cases['idle_repair_necessary'] += 1
         # case 3: cost for repair (predictive cost, corrective cost, loss because of not working machine)
+        # 维修成本（预测成本、纠正成本、因机器不工作造成的损失）
         elif currently_repairing > 0:
             for machine in self.system_state_converter.machines:
                 if machine.status in ['under_repair', 'repair_finished'] and machine.repair_type == 'cbm':

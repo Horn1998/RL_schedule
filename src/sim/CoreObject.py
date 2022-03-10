@@ -4,6 +4,7 @@ import logging
 class CoreObject():
     '''
     Basic object to use in simulation, provides a simple constructor.
+    提供一个简单的仿真构造器
     '''
     def __init__(self, id, system):
         self.id = id

@@ -18,21 +18,21 @@ if __name__ == "__main__":
     env = SimEnvIH(system)
 
     # Hyperparameters
-    n_hidden1=14
-    n_hidden2=28
+    n_hidden1=14    #隐藏层1
+    n_hidden2=28    #隐藏层2
     start_learning = 97
-    batch_sz=137
-    gamma=0.993
-    lr=0.00036
-    target_update_iter=98
-    epsilon_decay=0.000029
-    epsilon=0.2
-    min_epsilon=0.1
-    buffer_sz=100000
+    batch_sz=137    #批量大小
+    gamma=0.993     #奖励衰减
+    lr=0.00036      #学习率
+    target_update_iter=98   #目标更新轮数
+    epsilon_decay=0.000029  #ε衰减
+    epsilon=0.2             #ε=0.2
+    min_epsilon=0.1         #ε下限
+    buffer_sz=100000        #缓冲区大小
 
-    epochs = 3000
+    epochs = 3000           #代数
 
-# 
+
 env_dims = env.system_state_converter.get_observation_dims()
 action_dims = env.action_space.n
 

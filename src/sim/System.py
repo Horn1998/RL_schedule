@@ -11,12 +11,12 @@ class System():
     """
     Manufacturing system class
     # :param maintenace_plan: list, in form (loc, time, duration)
-    # :param maintenance costs: dict,  of costs by job type
+    # :param maintenance costs: dict, of costs by job type
     """
 
     def __init__(self, use_case, production_system):
         ''' Sets up the general system structure. Supposed to be called exactly once at the beginning of training.'''
-        
+        """该类提供了系统架构，只在训练开始时执行一次"""
         self.logger = logging.getLogger("factory_sim")
         
         # use case: 'ih'
@@ -49,6 +49,7 @@ class System():
         self.simulation_time = 400
         
         # part of a timestep which delays or prepones parts of the simulation
+        # 表示延迟或者模拟前置部分的部分时间戳？？？
         self.epsilon = 0.00001
         
         # schedule/shift parameters
@@ -73,7 +74,9 @@ class System():
         
         """ Initializes the system for simulation. New simpy.Environment per simulation is needed.
         This method is supposed to be called in the SimEnv.reset(), every time a new episode starts."""
-        
+        """
+        初始化系统以进行模拟，新simpy需要每个模拟的环境，这个方法应该在SimEnv中调用。在新一轮开始时重置。
+        """
         self.sim_env = simpy.Environment()
         
         # initialize weekly Schedule
@@ -90,6 +93,7 @@ class System():
         self.machines_to_repair = []
         
         # set up filtered stores as source, items in production (output buffers) and sink
+        # 将筛选后的存储设置为源、生产中的项目（输出缓冲区）和接收器
         self.source_store = simpy.FilterStore(env=self.sim_env, capacity=float('inf'))
         self.production_store = simpy.FilterStore(env=self.sim_env, capacity=self.store_capacity)
         self.sink_store = simpy.FilterStore(env=self.sim_env, capacity=float('inf'))

@@ -4,6 +4,7 @@ import logging
 class Schedule:
     """
     Uses simulation parameters to set up weekly schedule to provide methods to check for work-time/weekend.
+    使用模拟参数设置每周计划，以提供检查工作时间/周末的方法。
     """
     def __init__(self, sim_env, step_duration, work_start_mon, work_end_sat, weekend_on=True):
         self.sim_env = sim_env
@@ -18,7 +19,7 @@ class Schedule:
         self.work_start_mon = work_start_mon
         self.work_end_sat = work_end_sat
         
-        #sunday + saturday + monday
+        #sunday + saturday + monday 不工作时间
         self.steps_per_weekend = self.steps_per_day + ((24 - self.work_end_sat) + (self.work_start_mon)) / step_duration
         
         self.logger = logging.getLogger("factory_sim")
@@ -53,7 +54,7 @@ class Schedule:
             return True
     
         current_step = self.sim_env.now + steps_for_process
-        current_hour = 6 + current_step * self.step_duration # can lead to float hours
+        current_hour = 6 + current_step * self.step_duration  # can lead to float hours
         current_hour_in_day = current_hour % 24
         current_hour_in_week = current_hour % 168
         current_day = int(current_hour_in_week / 24)
@@ -74,7 +75,8 @@ class Schedule:
     def is_action_within_worktime(self, steps_for_process):
         """
         checks if there is weekend between now and end of process (False)
-        True if process not interrupted by weekend between now and now + steps_for_process 
+        True if process not interrupted by weekend between now and now + steps_for_process
+        判断当前进程是否能在周末之前完成
         """
         for i in range(0, steps_for_process):
             if not self.is_it_worktime(steps_for_process=i):
@@ -84,8 +86,9 @@ class Schedule:
     def get_time_new_week(self):
         """
         returns the time left (in hours) to the start of the next week
+        计算多久到达下一个周
         """
-        return (self.steps_per_week - (self.sim_env.now  % self.steps_per_week)) * self.step_duration
+        return (self.steps_per_week - (self.sim_env.now % self.steps_per_week)) * self.step_duration
     
     def get_steps_new_week(self):
         """

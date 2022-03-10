@@ -23,7 +23,7 @@ class Product:
             #return self.next_task
         else:
             number_of_tasks = len(self.production_system.tasks_for_product[self.product_type])
-            for i in range(0,number_of_tasks):
+            for i in range(number_of_tasks):
                 # when previous_task is task at i-th step, set i+1-th task as next_task
                 if self.previous_task == self.production_system.tasks_for_product[self.product_type][i]:
                     #if previous_task was last task, set product as finished, next_task as None
